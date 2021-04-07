@@ -10,8 +10,8 @@ export default [
     {
         input: './src/index.ts',
         output: {
-            file: './dist/altv-rpc.mjs',
-            format: 'esm'
+            file: './dist/altv-rpc.js',
+            format: 'commonjs'
         },
         plugins: [
             replace({
