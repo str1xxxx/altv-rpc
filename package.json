@@ -2,7 +2,7 @@
   "name": "altv-rpc",
   "version": "0.1.3",
   "description": "An asynchronous RPC implementation for alt:V",
-  "main": "dist/altv-rpc.mjs",
+  "main": "dist/altv-rpc.js",
   "browser": "dist/altv-rpc-browser.js",
   "types": "dist/altv-rpc.d.ts",
   "scripts": {
