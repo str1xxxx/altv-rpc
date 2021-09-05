@@ -22,6 +22,9 @@ export function triggerBrowsers(player: any, name: string, args?: any): void;
 export function triggerBrowsers(name: string, args?: any): void;
 export function triggerBrowser(browser: any, name: string, args?: any): void;
 
+export function procedurable(): any;
+export function procedure(procedureName: string | string[]): MethodDecorator;
+
 export interface ProcedureListenerInfo {
     environment: string;
     id?: string;
