@@ -247,7 +247,7 @@ function processEvent(event: Event, player?: any, webView?: any) {
 
 async function callProcedure(name: string, args: any, info: ProcedureListenerInfo): Promise<any> {
     const listener = rpcListeners[name];
-    if (!listener) throw ERR_NOT_FOUND;
+    if (!listener) throw `${ERR_NOT_FOUND} (${name})`;
     return listener(args, info);
 }
 
@@ -512,7 +512,7 @@ function _callBrowsers(player: any, name: string, args?: any, extraData: Partial
     switch (environment) {
         case 'client':
             const browser = rpcBrowserProcedures[name];
-            if (!browser || !browser.valid) return Promise.reject(ERR_NOT_FOUND);
+            if (!browser || !browser.valid) return Promise.reject(`${ERR_NOT_FOUND} (${name})`);
             return _callBrowser(browser, name, args, extraData);
         case 'server':
             return _callClient(player, '__rpc:callBrowsers', [name, args, +extraData.noRet], extraData);
