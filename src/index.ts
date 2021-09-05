@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import alt from 'alt';
 import * as util from './util';
 
@@ -74,12 +75,21 @@ interface Incoming {
     total: number;
 }
 
+interface IProcedure {
+    procedure: string[]
+    callable: string
+    func?: Function
+}
+
+type ProcedureCollection = Map<string, IProcedure[]>
+
 const rpcListeners: { [prop: string]: Function } = {}; // keeps track of procedure listeners
 const rpcPending: { [prop: string]: Pending } = {}; // keeps track of called procedures that are waiting on results
 const rpcIncoming: { [prop: string]: Incoming } = {}; // keeps track of incoming packets that might have multiple parts
 const rpcEvListeners: { [prop: string]: Set<Function> } = {}; // keeps track of event listeners
 const rpcBrowsers: any[] = []; // list of all registered webviews
 const rpcBrowserProcedures: { [prop: string]: any } = {}; // which webviews are registered to which procedures
+const registeredProcedures: ProcedureCollection = new Map<string, IProcedure[]>()// A storage of procedures which is called by decorator procedure
 
 let rpcNamespace = '';
 
@@ -715,6 +725,96 @@ export function triggerBrowser(browser: any, name: string, args?: any){
     _callBrowser(browser, getEventName(TRIGGER_EVENT), [name, args], { noRet: 1});
 }
 
+/**
+ * Resolve any procedures which passed to classes with decorator procedurable
+ */
+export const procedurable = () => {
+    return function(target: any): any {
+        return class extends target {
+            constructor(...args: any[]) {
+                // first we must call an inherited constructor
+                super(...args)
+  
+                // then we start record our procedures into Altv API
+                // check if class events has already registered
+                if (!Reflect.getMetadata("design:procedurelist:init", target.prototype)) {
+                    const procedures: ProcedureCollection = Reflect.getMetadata("design:procedurelist", target.prototype) || []
+  
+                    // register events in Altv API 
+                    procedures.forEach((procedureObjects, procedureName) => {
+                        procedureObjects = procedureObjects.map(procedureObject => {
+                            const { procedure, callable } = procedureObject
+    
+                            // record a callable method
+                            // to manage in future
+                            const callableMethod = this[callable]
+                            if (typeof this[callable] !== 'function') throw new Error(`Event[${procedureName}] in ${this.constructor.name} is not callable!`)
+    
+                            procedure.forEach(procedureName => register(procedureName, callableMethod))
+  
+                            procedureObject.func = callableMethod
+  
+                            return procedureObject
+                        })
+  
+                        // record new event into global storage
+                        const registeredProcedure = registeredProcedures.get(procedureName) || []
+                        registeredProcedures.set(procedureName, [...registeredProcedure, ...procedureObjects])
+                    })
+                    // set flag to target.prototype that all class procedures are registered
+                    Reflect.defineMetadata("design:procedurelist:init", true, target.prototype)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Decorator for adding procedures into Altv API
+ * 
+ * @param {string | string[]} procedureName - procedure(s) name
+ * 
+ * @example
+ * decorator usage:
+ * procedure("playerJoin")
+ * procedure(["playerDeath", "playerQuit"])
+ */
+ export const procedure = (procedureName: string | string[]): MethodDecorator => {
+    // make sure we have an array in the procedure
+    // and clean any duplicate cmds which passed into the params
+    procedureName = Array.isArray(procedureName) ? procedureName : [procedureName]
+    const procedures = procedureName.filter((item, index) => procedureName.indexOf(item) === index)
+  
+    const newProcedure: IProcedure = {
+      procedure: procedures,
+      callable: ''
+    }
+  
+    // get a main procedure name
+    const mainProcedure = procedures[0]
+  
+    // return methodDecorator in which we define our IEvent into metadata
+    return function(target: Object, callableMethod: string | symbol, descriptor: TypedPropertyDescriptor<any>) {
+      // method must be callable
+      if (!(descriptor.value instanceof Function)) throw new Error(`Procedure[${mainProcedure}] must be callable`)
+  
+      // get the target metadata to merge new Iprocedure
+      const targetProcedure: ProcedureCollection = Reflect.getMetadata("design:procedurelist", target) || new Map<string, IProcedure>()
+  
+      // set the callable procedure
+      newProcedure.callable = callableMethod.toString()
+  
+      // merge with existing procedures
+      const procedureObjects = targetProcedure.get(mainProcedure)
+      targetProcedure.set(mainProcedure, procedureObjects && [...procedureObjects, newProcedure] || [newProcedure])
+  
+      // store them into metadata
+      Reflect.defineMetadata("design:procedurelist", targetProcedure, target)
+  
+      return descriptor
+    }
+  }
+
 export default {
     init,
     addWebView,
@@ -731,5 +831,7 @@ export default {
     triggerServer,
     triggerClient,
     triggerBrowsers,
-    triggerBrowser
+    triggerBrowser,
+    procedurable,
+    procedure
 };
