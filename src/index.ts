@@ -747,7 +747,7 @@ export const procedurable = () => {
     
                             // record a callable method
                             // to manage in future
-                            const callableMethod = this[callable]
+                            const callableMethod = this[callable].bind(this)
                             if (typeof this[callable] !== 'function') throw new Error(`Event[${procedureName}] in ${this.constructor.name} is not callable!`)
     
                             procedure.forEach(procedureName => register(procedureName, callableMethod))
