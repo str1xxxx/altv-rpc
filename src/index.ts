@@ -1,7 +1,7 @@
+import 'reflect-metadata'
 import alt from 'alt';
 import * as util from './util';
 
-//import * from 'reflect-metadata'
 const environment = util.getEnvironment();
 if (!environment) throw 'Unknown alt:V environment';
 
