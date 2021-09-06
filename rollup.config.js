@@ -11,7 +11,7 @@ export default [
         input: './src/index.ts',
         output: {
             file: './dist/altv-rpc.js',
-            format: 'commonjs'
+            format: 'es'
         },
         plugins: [
             replace({
