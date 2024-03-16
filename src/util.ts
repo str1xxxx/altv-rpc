@@ -49,7 +49,7 @@ export function parseData(data: string): any {
     try {
         return JSON.parse(data, (_, value) => {
             if ((env === 'client' || env === 'server') && value && typeof value === 'object' && typeof value.__i === 'number' && Object.keys(value).length === 1) {
-                return alt.Entity.getByID(value.__i);
+                return alt.Entity.getByRemoteID(value.__i);
             }
 
             return value;

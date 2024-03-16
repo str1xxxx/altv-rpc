@@ -5,7 +5,7 @@ import * as util from './util';
 const environment = util.getEnvironment();
 if (!environment) throw 'Unknown alt:V environment';
 
-const ERR_NOT_FOUND = 'PROCEDURE_NOT_FOUND';
+const ERR_NOT_FOUND = 'EVENT NOT FOUND';
 
 const PROCESS_EVENT = '__rpc:process'; // main event for processing incoming procedure requests & responses
 const BROWSER_REGISTER = '__rpc:browserRegister'; // event for when a browser registers a procedure
