@@ -30,9 +30,23 @@ export function stringifyData(data: any): string {
     const env = getEnvironment();
 
     return JSON.stringify(data, (_, value) => {
-        if ((env === 'client' || env === 'server') && value instanceof alt.Entity) {
+        // if ((env === 'client' || env === 'server') && value instanceof alt.Entity) {
+        //     return {
+        //         __i: value.id,
+        //         __type: value.type,
+        //     };
+        // }
+
+        // return value;
+        if (env === 'client' && value instanceof alt.Entity) {
             return {
-                __i: value.id
+                __i: value.remoteID,
+                __type: value.type,
+            };
+        } else if (env === 'server' && value instanceof alt.Entity) {
+            return {
+                __i: value.id,
+                __type: value.type,
             };
         }
 
@@ -48,8 +62,13 @@ export function parseData(data: string): any {
 
     try {
         return JSON.parse(data, (_, value) => {
-            console.log('SO', alt, alt.BaseObject, env)
-            if ((env === 'client' || env === 'server') && value && typeof value === 'object' && typeof value.__i === 'number' && Object.keys(value).length === 1) {
+            if (
+                (env === 'client' || env === 'server') &&
+                value &&
+                typeof value === 'object' &&
+                typeof value.__i === 'number' &&
+                Object.keys(value).length === 1
+            ) {
                 return alt.BaseObject.getById(value.__i);
             }
 
@@ -64,13 +83,13 @@ export function parseData(data: string): any {
 /**
  * Waits for a promise to be settled or a timeout, whichever comes first.
  */
-export function promiseTimeout(promise: Promise<any>, timeout?: number){
+export function promiseTimeout(promise: Promise<any>, timeout?: number) {
     if (typeof timeout === 'number') {
         return Promise.race([
             new Promise((_, reject) => {
                 setTimeout(() => reject('TIMEOUT'), timeout);
             }),
-            promise
+            promise,
         ]);
     } else return promise;
 }
