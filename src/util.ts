@@ -48,6 +48,7 @@ export function parseData(data: string): any {
 
     try {
         return JSON.parse(data, (_, value) => {
+            console.log('SO', alt, alt.BaseObject, env)
             if ((env === 'client' || env === 'server') && value && typeof value === 'object' && typeof value.__i === 'number' && Object.keys(value).length === 1) {
                 return alt.BaseObject.getById(value.__i);
             }
